@@ -1,0 +1,21 @@
+Exercise:
+
+A program that computes the factorial of an integer (i.e. the product of
+all integers up to and including that number).
+
+0! = 1
+1! = 1
+2! = 1 * 2 = 2
+3! = 1 * 2 * 3 = 6
+4! = 1 * 2 * 3 * 4 = 24
+5! = 1 * 2 * 3 * 4 * 5 = 120
+etc. (the exclamation point means factorial)
+
+Input:
+Slot 0 is the integer whose factorial is to be computed
+Output:
+Slot 9 is the factorial of the input
+
+Note that because of the step limit before the interpreter assumes an
+infinite loop, you won't be able to calculate factorials beyond 6 or 7
+before using too many steps.

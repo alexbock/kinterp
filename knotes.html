@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Kwama Notes</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        font-family: serif;
+        background-color: #f7f7ea;
+      }
+
+      #everything {
+        max-width: 40em;
+      }
+
+      .code {
+        font-family: monospace;
+        color: red;
+      }
+
+      .plain {
+        font-family: serif;
+        color: black;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="everything">
+      <h1>The Kwama Programming Language</h1>
+      <h2>Introduction</h2>
+      <p>
+        Kwama is a very simple low level toy language. This is an example
+        of a Kwama program:
+      </p>
+
+      <div class="code">
+        add @0 $10<br>
+        :0<br>
+        add @1 $3<br>
+        sub @0 $1<br>
+        cmp @0 $0<br>
+        jne L0
+      </div>
+
+      <p>
+        While this program looks strange, it uses every feature of the
+        Kwama language! There is nothing novel beyond what you see here.
+        We aren't going to focus on this example for the time being, but
+        it will make sense later.
+      </p>
+
+      <p>
+        We are going to start with the basic structure of the language.
+        Every program consists of a list of <strong>instructions</strong> and
+        may also contain <strong>labels</strong>. Each line is executed in sequence.
+        Each instruction always occupies exactly one line. This is an example
+        of an instruction:
+      </p>
+
+      <div class="code">
+        add @0 $5
+      </div>
+
+      <p>
+        Each instruction has two parts: an <strong>opcode</strong> and its
+        <strong>argument(s)</strong>. The opcode selects what operation is to
+        be performed, and the arguments specify how or where it is performed.
+        In the instruction above, the opcode is <span class="code">add</span>.
+        The <span class="code">add</span> opcode requires two arguments. In the
+        instruction above, the first argument is <span class="code">@0</span>
+        and the second argument is <span class="code">$5</span>. Do not worry
+        about what these numbers mean right now. The general form of an
+        instruction is:
+      </p>
+
+      <div class="code">
+        opcode argument1 argument2 argument3 <span class="plain">(etc)</span>
+      </div>
+
+      <p>
+        The <strong>only</strong> other kind of line is called a label. All
+        lines are either instructions or labels. Labels start on a new line
+        with a colon followed immediately by a number. In the following example,
+        the first and last lines are instructions and the middle line is a label:
+      </p>
+
+      <div class="code">
+        add @2 @3 <br>
+        :5 <br>
+        cmp @3 $7 <br>
+      </div>
+
+      <p>
+        We will discuss labels later.
+      </p>
+
+      <h2>Memory</h2>
+      <p>
+      A Kwama program has access to a <strong>memory bank</strong> consisting
+      of a number of <strong>memory slots</strong>. Each memory slot can store
+      a single integer. There are a fixed number of memory slots. Kwama machines
+      with large amounts of memory are very expensive, so we'll work with a
+      modest machine with only ten memory slots for now. Memory slots are the
+      only memory or storage a Kwama program has access to. There is no way to
+      store or retrieve data other than using memory slots.
+      You may have heard of things called "strings", "arrays", "objects",
+      "functions", or any other number of strange names. None of these things
+      exist in the Kwama language. The ten memory slots in our machine are
+      numbered 0 through 9:
+      </p>
+
+      <div class="code">
+        0 1 2 3 4 5 6 7 8 9
+      </div>
+
+      <p>
+        When the machine starts, the value in each slot is 0.
+        When the machine stops, the value of each slot will be displayed on the screen.
+        You can see the results of your program by looking at the value of the slot
+        where the program stored its result.
+      </p>
+
+      <h2>Arguments</h2>
+
+      <p>
+        There are two main types of arguments in the Kwama language. One of them
+        is for referencing memory slots. A memory slot is referred to by prefixing
+        its number with an at sign (<span class="code">@</span>). For example,
+        an argument that references memory slot 5 would be written
+        <span class="code">@5</span>.
+      </p>
+
+      <p>
+        The other main type of argument is the <strong>literal</strong>. A literal
+        argument is literally the value of a number. Literal arguments are written
+        by prefixing the numeric value with a dollar sign (<span class="code">$</span>).
+        For example, an argument that has the literal value 7 would be written
+        <span class="code">$7</span>.
+      </p>
+
+      <p>
+        Ensure that you can immediately recall that <span class="code">@3</span>
+        means "memory slot 3" and <span class="code">$9</span> means "the value 9"
+        whenever you see these used.
+      </p>
+
+      <h2>The <span class="code">add</span> instruction</h2>
+
+      <p>
+        The <span class="code">add</span> instruction (introduced using the opcode
+        <span class="code">add</span>) takes two arguments. The first argument is
+        the <strong>destination</strong> and the second argument is the
+        <strong>source</strong>. When an <span class="code">add</span> instruction
+        is executed, the sum of the destination and the source will be stored
+        in the destination. For example, in this instruction:
+      </p>
+
+      <div class="code">
+        add @3 $5
+      </div>
+
+      <p>
+        The first argument, <span class="code">@3</span>, is the destination.
+        The second argument, <span class="code">$5</span> is the source.
+        This instruction will compute the sum of <span class="code">@3</span> and
+        <span class="code">$5</span> and store the result in <span class="code">@3</span>.
+        This is a long-winded way of saying that this instruction effectively adds
+        5 to the value of memory slot 3. Try this example in the Kwama intpreter
+        by entering the instruction above and pressing the Run button. At the
+        bottom of the screen you should see the message "memory slot 3 has the value 5"
+        indicating that the instruction was successful. Modify this example to
+        instead add 2 to memory slot 0 and run the program to verify that it
+        worked.
+      </p>
+
+      <p>
+        Now, consider this instruction:
+      </p>
+
+      <div class="code">
+        add $5 @3
+      </div>
+
+      <p>
+        Do not attempt to run this instruction yet. Notice that this instruction
+        is the same as the previous one except that the arguments were reversed.
+        The original instruction we discussed above added 5 to memory slot 3; what
+        does this new instruction do now that the arguments were reversed?
+        The destination is now the literal 5, but this doesn't make sense because
+        the <span class="code">add</span> instruction modifies its destination.
+        While it's perfectly reasonable to modify a memory slot, it does not make
+        sense to modify a literal. One cannot change the value of 5, it will
+        always be 5. Because <span class="code">$5</span> is the literal value 5
+        and not a memory slot <strong>it cannot be modified</strong>. This code
+        is actually illegal. Try running it now and you will get an error message.
+      </p>
+
+      <h3>Exercise 1a</h3>
+
+      <p>
+        Write a program that results in memory slot 5 having the value 9.
+      </p>
+
+      <h3>Exercise 1b</h3>
+
+      <p>
+        Write a program that results in memory slot 9 having the value 5.
+      </p>
+
+      <h3>Exercise 1c</h3>
+
+      <p>
+        Write a program that results in both:
+        <ul>
+          <li>memory slot 5 having the value 9</li>
+          <li>memory slot 9 having the value 5</li>
+        </ul>
+        This program will require two lines.
+      </p>
+
+      <h3>Exercise 2</h3>
+
+      <p>
+        Start with this program:
+      </p>
+
+      <div class="code">
+        add @4 $5
+      </div>
+
+      <p>
+        Add a second line so that the program results in memory slot 4
+        having the value 11. <strong>Do not modify or delete the first line
+          provided above.</strong> Your program must execute the first line
+          that was provided, then a second line you have written, such that memory slot 4 ends
+          with the value 11.
+      </p>
+
+      <h3>Exercise 2a</h3>
+
+      <p>
+        Start with this program:
+      </p>
+
+      <div class="code">
+        add @7 $3
+      </div>
+
+      <p>
+        Add a second line so that the program results in memory slot 5
+        having the value 3 <strong>without using any literals in the second
+        line</strong>. As before, you may not modify or delete the first line.
+        The values of memory slots other than 5 at the end of your program do
+        not matter.
+      </p>
+
+      <h3>Exercise 2b</h3>
+
+      <p>
+        Start with this program:
+      </p>
+
+      <div class="code">
+        add @1 $4<br>
+        add @2 $5
+      </div>
+
+      <p>
+        Add a third and fourth line so that the program results in memory slot 3
+        having the value 9 <strong>without using any literals in the third
+        or fourth lines</strong>. As before, you may not modify or delete the first or second line.
+        The values of memory slots other than 3 at the end of your program do
+        not matter.
+      </p>
+
+      <h2>The <span class="code">jmp</span> instruction and labels</h2>
+
+      <p>
+      Labels were mentioned briefly above and will finally be properly introduced.
+      The <span class="code">jmp</span> instruction allows you to jump to
+      a different spot in your program and continue running from there. Locations
+      that can be jumped to are marked with a label. Every label is defined with
+      a unique numeric ID (the number that appears after the colon). This same
+      number is provided as the single argument to the <span class="code">jmp</span>
+      instruction to select the target label. Because the label ID is neither a literal nor a memory slot,
+      we do not use <span class="code">$</span> or <span class="code">@</span>
+      as a prefix but instead use <span class="code">L</span> for label. For example:
+      </p>
+
+      <div class="code">
+        add @0 $5 <br>
+        jmp L4 <br>
+        add @1 $6 <br>
+        :4 <br>
+        add @2 $7
+      </div>
+
+      <p>
+        The <span class="code">jmp</span> instruction jumps to label <span class="code">L4</span>,
+        effectively skipping the instruction that would otherwise add 6 to memory slot 1. Run
+        this program and observe the result. Remove the <span class="code">jmp</span> instruction
+        and observe the difference in behavior. Notice that the presence of the label alone does
+        not influence the program, it is only the <span class="code">jmp</span> instruction that
+        performs an action. Labels are merely bookmarks.
+      </p>
+
+      <h3>Exercise 3</h3>
+
+      <div class="code">
+        :5 <br>
+        add @0 $7 <br>
+        :2 <br>
+        add @1 $7 <br>
+        :9 <br>
+        add @2 $7 <br>
+        :3 <br>
+        add @3 $7 <br>
+        :6 <br>
+        add @4 $7
+      </div>
+
+      <p>
+        Modify this program by inserting <span class="code">jmp</span>
+        instructions so that the result is that memory slots 0, 2, and 4 each have
+        the value 7 and all other memory slots have the value 0. Do not make
+        any changes except to insert <span class="code">jmp</span> instructions wherever you want.
+      </p>
+
+      <h3>Exercise 4</h3>
+
+      <div class="code">
+        :1 <br>
+        jmp L1
+      </div>
+
+      <p>
+        What do you think will happen if you run this code? Try it.
+      </p>
+
+      <h2>The <span class="code">cmp</span> instruction</h2>
+
+      <p>
+        The <span class="code">cmp</span> instruction takes two arguments
+        and compares them. It does not modify any memory; instead the
+        <span class="code">cmp</span> instruction modifies a special part
+        of the machine that you cannot directly access called the <strong>
+        comparison flag</strong>. This is a hidden value within the machine
+        that stores the result of the last <span class="code">cmp</span>
+        instruction. If both arguments are equal the comparison flag will be
+        set to 0. If the first argument is less than the second argument,
+        the comparison flag will be set to -1, and if the first argument greater
+        than the second argument, the comparison flag will be set to 1. For example:
+      </p>
+
+      <div class="code">
+        cmp $4 $4 <span class="plain">(equal, comparison flag will be 0)</span> <br>
+        cmp $4 $5 <span class="plain">(less, comparison flag will be -1)</span> <br>
+        cmp $5 $4 <span class="plain">(greater, comparison flag will be 1)</span>
+      </div>
+
+      <p>
+        The <span class="code">cmp</span> instruction does not do anything except change the
+        value of the comparison flag.
+        The value of the comparison flag at the end of your program is printed
+        under the list of memory slots. You may be wondering what the use of this
+        instruction is if all it does is set the comparison flag, which you cannot
+        access. The answer is that certain other instructions depend on the value
+        of the comparison flag for their behavior. We will discuss such an
+        instruction next.
+      </p>
+
+      <h2>The <span class="code">jne</span> instruction</h2>
+
+      <p>
+        The <span class="code">jne</span> is a sibling of the <span class="code">jmp</span>
+        instruction. The difference is that instead of blindly jumping wherever it is told,
+        it will instead "<strong>j</strong>ump if <strong>n</strong>ot <strong>e</strong>qual".
+        The "not equal" here refers to the value of the comparison flag; <span class="code">jne</span>
+        will jump only if the last comparison (<span class="code">cmp</span> instruction) was not equal
+        (the comparison flag is not 0); otherwise
+        it will be ignored completely. This is the first instruction that allows decision-making. We
+        can base the decision to jump or not on a comparison. This is the last new instruction that is
+        strictly necessary in order to make the language essentially capable of computing anything.
+      </p>
+
+      <p>
+        A comparison that is never equal followed by a <span class="code">jne</span> instruction
+        is essentially identical to a <span class="code">jmp</span> instruction, e.g.:
+      </p>
+
+      <div class="code">
+        :9 <br>
+        cmp $3 $7 <br>
+        jne L9
+      </div>
+
+      <p>
+        Because the comparison between 3 and 7 will never be equal, the comparison flag will never
+        be 0 when the <span class="code">jne</span> instruction runs, so it will always jump. This
+        program is thus identical in behavior to:
+      </p>
+
+      <div class="code">
+        :9 <br>
+        jmp L9
+      </div>
+
+      <p>
+        The opposite is also true if a <span class="code">jne</span> instruction
+        is preceded by a comparison that is always equal, e.g.:
+      </p>
+
+      <div class="code">
+        :9 <br>
+        cmp $7 $7 <br>
+        jne L9
+      </div>
+
+      <p>
+        The jump will never be taken here because the comparison flag will always be 0.
+      </p>
+
+      <h3>Exercise 5</h3>
+
+      <p>
+        Below is the code example used at the very beginning of this document.
+        You have now seen every instruction it requires except for <span class="code">sub</span>
+        which simply performs subtraction (<span class="code">sub @0 $1</span> subtracts one from memory slot 0):
+      </p>
+
+      <div class="code">
+        add @0 $10 <br>
+        :0 <br>
+        add @1 $3 <br>
+        sub @0 $1 <br>
+        cmp @0 $0 <br>
+        jne L0
+      </div>
+
+      <p>
+        What is the output when you run this program? How does it work? What happens
+        if you use different values in place of <span class="code">$10</span>
+        and <span class="code">$3</span>? What operation does this code perform?
+      </p>
+<!--
+      <p>
+        As an example of a practical use of the <span class="code">jne</span> instruction,
+        we will implement multiplication. The language does not have an instruction that
+        performs multiplication, but multiplication is merely repeated addition and the
+        <span class="code">jne</span> instruction affords the power to control repetition:
+        (this example makes use of <strong>comments</strong> which are lines that start with
+        a pound sign and have no effect on the program)
+      </p>
+
+      <div class="code">
+        # We will use @0 and @1 to <br>
+        # store the numbers that <br>
+        # we want to multiply. The <br>
+        # result will go in @2. <br>
+ <br>
+        # Set inputs <br>
+        add @0 $5 <br>
+        add @1 $3 <br>
+ <br>
+        # Add @1 to @2 a total <br>
+        # of @0 times <br>
+        :0 <br>
+        cmp @0 $0 <br>
+        jne L1 <br>
+        jmp L3 <br>
+        :1 <br>
+        add @2 @1 <br>
+        add @0 $-1 <br>
+        jmp L0 <br>
+        :3 <br>
+        # The end.
+      </div>
+
+      <p>
+        After this program runs, memory slot 2 will contain 15. This is the product
+        of 5 and 3, which are the values that the program uses from memory slots
+        0 and 1. If you change this 5 to a 6 the result in memory slot 2 will change
+        to 18, etc. Study this program line by line, imagining how it acts at each step.
+        (Note that the use of <span class="code">$-1</span> is simply the value negative one.)
+        This is the first non-trivial program we have seen so this may take some time.
+      </p>
+
+      <h3>Exercise 5</h3>
+
+      <p>
+        Using the rules we have established so far, write out the entire state of the machine
+        as each line of the multiplication example executes (the same state that is printed at
+        the end of the program, except for every step of execution instead of just the final step).
+        As a start:
+        <ol>
+          <li>We start with a clean slate. All memory slots are zero.</li>
+          <li>Execute <span class="code">add @0 $5</span></li>
+          <li>Now memory slot 0 is 5, all other memory slots are still 0</li>
+          <li>Execute <span class="code">add @1 $3</span></li>
+          <li>Now memory slot 0 is 5, memory slot 1 is 3, and all other memory slots are still 0</li>
+          <li>Execute <span class="code">cmp @0 $0</span></li>
+          <li>Now the comparison flag is 1 because 5 is greater than 0</li>
+          <li>Execute <span class="code">jne L1</span> (comparison flag is not zero so jump is taken)</li>
+          <li>We have now jumped to <span class="code">:1</span></li>
+          <li>Execute <span class="code">add @2 @1</span></li>
+          <li>Now memory slot 0 is 5, memory slot 1 is 3, and memory slot 2 is 3</li>
+          <li>Execute <span class="code">add @0 $-1</span></li>
+          <li>Now memory slot 0 is 4, memory slot 1 is 3, and memory slot 2 is 3</li>
+          <li>Execute <span class="code">jmp L0</span></li>
+          <li>Now we're back to <span class="code">:0</span> but memory slot 0 is 4 and memory slot 2 is 3...</li>
+          <li>...eventually the program ends and memory slot 2 is 15</li>
+        </ol>
+      </p>
+    -->
+    </div>
+  </body>
+</html>

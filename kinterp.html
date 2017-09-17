@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+      <title>Kwama Interpreter</title>
+      <script>
+      "use strict";
+
+      var ip = 0; // index into program of next instruction
+      var labels = []; // label number -> program index
+      var memory = new Array(10);
+      var flags = { "cmp": 0 }; // flags register
+      var src; // assembly source code
+      var level = 0; // feature level
+
+      function InvalidOperation(msg) {
+        this.msg = msg;
+      }
+
+      function processLabels() {
+        labels = [];
+        for (var i = 0; i < src.length; ++i) {
+          if (src[i] == ':') {
+            var eol = src.indexOf("\n", i);
+            if (eol == -1) {
+              throw new InvalidOperation("no newline after label");
+            }
+            var label = src.substr(i + 1, eol - (i + 1)).trim();
+            if (Math.floor(label) != label) {
+              throw new InvalidOperation("label must be an integer");
+            }
+            labels[label] = eol + 1;
+            i = eol;
+          }
+        }
+      }
+
+      function checkOperandCount(actual, expected, opcode) {
+        if (actual != expected) {
+          throw new InvalidOperation(
+            "invalid operand count (" + actual +
+            ") for "+ opcode + " (" + expected + ")"
+           );
+        }
+      }
+
+      function ConstantArgument(v) {
+        this.get = function getConstant() {
+          return v;
+        };
+
+        this.set = function setConstant() {
+          throw new InvalidOperation("cannot modify a constant");
+        };
+      }
+
+      function MemoryArgument(addr) {
+        this.get = function getMemory() {
+          return memory[addr];
+        };
+
+        this.set = function setMemory(x) {
+          memory[addr] = x;
+        };
+      }
+
+      function parseArgumentNumber(arg) {
+        var value = Math.floor(arg);
+        if (value != arg) {
+          throw new InvalidOperation("invalid integer '" + arg + "'");
+        }
+        return value;
+      }
+
+      function parseArgument(arg) {
+        if (arg.startsWith("@")) {
+          return new MemoryArgument(parseArgumentNumber(arg.substr(1)));
+        } else if (arg.startsWith("$") || arg.startsWith("L")) {
+          return new ConstantArgument(parseArgumentNumber(arg.substr(1)));
+        } else {
+          throw new InvalidOperation("missing sigil (@/$/L) for '" + arg + "'");
+        }
+      }
+
+      function parseArgumentList(args) {
+        var parsed = [];
+        for (var i = 0; i < args.length; ++i) {
+          parsed.push(parseArgument(args[i]));
+        }
+        return parsed;
+      }
+
+      function step() {
+        if (ip >= src.length) { return false; }
+        var line = src.substr(ip);
+        var newline = line.indexOf('\n');
+        if (newline != -1) {
+          line = line.substr(0, newline);
+        }
+        var nextIp = ip + line.length + 1;
+
+        line = line.trim();
+        if (line[0] == ':' || line[0] == '#' || line.length == 0) {
+          ip = nextIp;
+          return step();
+        }
+
+        var parts = line.split(" ")
+        var args = parseArgumentList(parts.slice(1));
+        parts[0] = parts[0].toUpperCase();
+        if (parts[0] == "ADD") {
+          checkOperandCount(args.length, 2, "ADD");
+          args[0].set(args[0].get() + args[1].get());
+        } else if (parts[0] == "SUB") {
+          checkOperandCount(args.length, 2, "SUB");
+          args[0].set(args[0].get() - args[1].get());
+        } else if (parts[0] == "CMP") {
+          checkOperandCount(args.length, 2, "CMP");
+          if (args[0].get() < args[1].get()) {
+            flags.cmp = -1;
+          } else if (args[0].get() > args[1].get()) {
+            flags.cmp = 1;
+          } else {
+            flags.cmp = 0;
+          }
+        } else if (parts[0] == "JE") {
+          checkOperandCount(args.length, 1, "JE");
+          var target = labels[args[0].get()];
+          if (!target) {
+            throw new InvalidOperation("invalid label '" + parts[1] + "'");
+          }
+          if (flags.cmp == 0) {
+            nextIp = target;
+          }
+        } else if (parts[0] == "JNE") {
+          checkOperandCount(args.length, 1, "JNE");
+          var target = labels[args[0].get()];
+          if (!target) {
+            throw new InvalidOperation("invalid label '" + parts[1] + "'");
+          }
+          if (flags.cmp != 0) {
+            nextIp = target;
+          }
+        } else if (parts[0] == "JMP") {
+          checkOperandCount(args.length, 1, "JMP");
+          var target = labels[args[0].get()];
+          if (!target) {
+            throw new InvalidOperation("invalid label '" + parts[1] + "'");
+          }
+          nextIp = target;
+        } else if (parts[0] == "NOP") {
+          // do nothing
+        } else {
+          throw new InvalidOperation("bad opcode");
+        }
+
+        ip = nextIp;
+        return true;
+      }
+
+      function clearMemory() {
+        for (var i = 0; i < memory.length; ++i) {
+          memory[i] = 0;
+        }
+      }
+
+      function getLineForIp() {
+        return src.substr(0, ip).split("\n").length;
+      }
+
+      function renderMemory(steps) {
+        var out = "";
+        for (var i = 0; i < memory.length; ++i) {
+          out += "memory slot " + i + " has the value " + memory[i] + "<br>";
+        }
+        out += "<br>comparison flag: " + flags.cmp;
+        out += "<br>execution took " + steps + " steps";
+        document.getElementById("memory").innerHTML = out;
+      }
+
+      function runCode() {
+        ip = 0;
+        clearMemory();
+        src = document.getElementById("src").value;
+        try {
+          processLabels();
+          var steps = 0;
+          while (step()) {
+            ++steps;
+            if (steps > 300000) {
+              throw new InvalidOperation("program took more than 300,000 steps to run (possible infinite loop)");
+            }
+            continue;
+          }
+          renderMemory(steps);
+        } catch (ex) {
+          alert("error: " + ex.msg + " at line " + getLineForIp());
+        }
+      }
+    </script>
+  </head>
+  <body style="display: flex; justify-content: center; background-color: darkgray;">
+      <textarea id="src" rows="25" cols="40" style="font-family: monospace; font-size: 130%;" spellcheck="false"></textarea>
+    <div id="rightSide" style="padding: 1em; display: flex; flex-direction: column; justify-content: space-between; background-color: lightgray;">
+        <div style="font-family: monospace">
+            Memory after program has executed: <br><br>
+            <div id="memory" style="font-size: 110%";>
+              (program has not executed yet)
+            </div>
+        </div>
+
+        <div onclick="runCode();" id="runbtn" style="font-family: sans-serif; text-align: center; margin: 1em; border: 2px solid lightgreen;">Run</div>
+        <style>
+            #runbtn {
+                background-color: green;
+                color: white;
+            }
+
+            #runbtn:hover {
+                background-color: springgreen;
+                color: black;
+                cursor: pointer;
+            }
+        </style>
+    </div>
+  </body>
+</html>

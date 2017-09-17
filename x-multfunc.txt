@@ -1,0 +1,54 @@
+Here's an example of reusable multiplication code. Lines that start with #
+are comments and will be ignored. They're just there to explain what's
+going on. This code uses the same multiplication routine to perform three
+different multiplications. Note that subtracting a slot from itself is used
+to set a slot to zero; setting a slot to zero and then adding to it is used
+sometimes because there is no assignment instruction. (i.e. there's no
+"set" or "asgn" opcode, so if you want to set the value instead of just
+adding to it, you have to make it zero first)
+
+# Reusable multiplication.
+# Jump to L2 to invoke.
+# Numbers to multiply go in
+# slots 0 and 1. Result goes
+# in slot 2. When done it will
+# jump to the label in slot 3.
+# Slots 0 and 1 will both have
+# the value 0 afterward.
+jmp L1
+sub @2 @2
+:2
+add @2 @1
+sub @0 $1
+cmp @0 $0
+jne L2
+sub @1 @1
+jmp @3
+:1
+# Multiply 5 and 3, store in @9
+add @0 $5
+add @1 $3
+add @3 L100
+jmp L2
+:100
+sub @3 @3
+add @9 @2
+sub @2 @2
+# Multiply 7 and 7, store in @8
+add @0 $7
+add @1 $7
+add @3 L101
+jmp L2
+:101
+sub @3 @3
+add @8 @2
+sub @2 @2
+# Multiply 3 and 12, store in @7
+add @0 $3
+add @1 $12
+add @3 L102
+jmp L2
+:102
+sub @3 @3
+add @7 @2
+sub @2 @2
